@@ -15,7 +15,7 @@ To load the library in R, simply run in R:
 
     library(“GraBLD”)
 
-## 2. Tips for using GraBLD on large datasets### 
+## 2. Tips for using GraBLD on large datasets
 
 The package contains two main functions, one is to calcualte the LD adjustments and the other to calculate the gradient boosted polygenic score weights. The two are combined in the end to give the actual weights of the polygenic score. Though the method works for virtually any size of data (large or small sample size, and large or small number of SNPs), in practice, the performance will depend on the underlying effect size distribution of the phenotype of interest.  
 
