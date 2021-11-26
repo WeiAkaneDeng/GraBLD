@@ -1,4 +1,4 @@
-GraBLD (with updated options)
+# GraBLD (with updated options)
 
 Gradient boosted and LD adjusted (GraBLD) is an R based software package that applied to polygenic traits prediction using gene scores. 
 
