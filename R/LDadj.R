@@ -76,7 +76,7 @@
 #'
 #'
 
-LDadj <- function(source_data = NULL, geno_raw, size = 300,
+LDadj <- function(source_data = NULL, SNP_names = NULL, geno_raw = NULL, size = 300,
     chr = NULL, max_size = 1e+05, write = FALSE, outname = NULL,
     NAval = NA) {
 
@@ -86,6 +86,7 @@ LDadj <- function(source_data = NULL, geno_raw, size = 300,
 
     if (is.null(geno_raw)) {
         try(geno_data <- load_geno(source_data))
+
         if (is.null(geno_data)) {
             stop("Please ensure the data source is correct. No file found or readable.")
         } else {
@@ -93,9 +94,13 @@ LDadj <- function(source_data = NULL, geno_raw, size = 300,
             try(geno_norm <- full_normal_geno(geno_data, max_size = max_size,
                 NAval = NAval))
         }
+        SNP_names <- sapply(colnames(geno_data), function(ee) strsplit(ee, "_")[[1]][1])
+
     } else {
-        try(geno_norm <- full_normal_geno(geno_raw, max_size = max_size,
-            NAval = NAval))
+        if (is.null(SNP_names))
+        warning("There is no SNP names supplied, please make sure the LDadj and GraB statistics can be matched.")
+
+        try(geno_norm <- full_normal_geno(geno_raw, max_size = max_size, NAval = NAval))
         if (is.null(geno_norm)) {
             stop("Please ensure the data format is correct.")
         } else {
@@ -105,17 +110,21 @@ LDadj <- function(source_data = NULL, geno_raw, size = 300,
 
     LDadj <- genomewideLD(geno_norm, size = size)
     LDadj[which(LDadj < 1)] <- 1
+    if (is.null(chr)){
+    LDadjs <- cbind(SNP_names, LDadj)
+    } else {
     chr_out <- rep(chr, length(LDadj))
-    LDadjs <- cbind(chr_out, LDadj)
+    LDadjs <- cbind(SNP_names, chr_out, LDadj)
+    }
 
     if (write == TRUE) {
         if (is.null(outname)) {
             utils::write.table(LDadjs, paste("LDadj_", chr,
                 "_size_", size, "_SNPs.txt", sep = ""), col.names = F,
-                row.names = T, quote = F, sep = "\t")
+                row.names = F, quote = F, sep = "\t")
         } else {
             utils::write.table(LDadjs, paste(outname), col.names = F,
-                row.names = T, quote = F, sep = "\t")
+                row.names = F, quote = F, sep = "\t")
         }
     } else {
         return(LDadjs)

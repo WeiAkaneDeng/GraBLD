@@ -24,24 +24,34 @@
 #'
 
 
-load_geno <- function(source_data, PLINK = TRUE, chr = NULL) {
-    
-    if (is.null(chr)) {
-        raw_Data <- as.matrix(data.table::fread(paste(source_data, 
-            sep = ""), header = T))
+load_geno <- function(source_data, PLINKbin = TRUE) {
+
+    if (PLINKbin) {
+
+        if("BEDMatrix" %in% rownames(installed.packages()) == FALSE) {
+            print("BEDMatrix not installed, trying to intall now ...")
+            install.packages("BEDMatrix", repos='http://cran.us.r-project.org')
+        }
+
+        if("BGData" %in% rownames(installed.packages()) == FALSE) {
+            print("BGData not installed, trying to intall now ...")
+            install.packages("BGData", repos='http://cran.us.r-project.org', dependencies=T)
+        }
+
+    library("BGData")
+    library("BEDMatrix")
+    bedFiles <- BEDMatrix(source_data)
+    bg <- as.BGData(bedFiles, alternatePhenotypeFile = paste(paste0(source_data), ".fam",sep=""))
+    Data <- geno(bg)
+
     } else {
-        raw_Data = as.matrix(data.table::fread(paste(source_data, 
+        raw_Data = as.matrix(data.table::fread(paste(source_data,
             chr, ".raw", sep = ""), header = T))
+        Data <- matrix(as.numeric(raw_Data[, 7:dim(raw_Data)[2]]),
+                       nrow = dim(raw_Data)[1], byrow = FALSE)
+        colnames(Data) <- names(raw_Data[, 7:dim(raw_Data)[2]])
     }
-    
-    if (PLINK == TRUE) {
-        Data <- matrix(as.numeric(raw_Data[, 7:dim(raw_Data)[2]]), 
-            nrow = dim(raw_Data)[1], byrow = FALSE)
-    } else {
-        Data <- matrix(as.numeric(raw_Data), nrow = dim(raw_Data)[1], 
-            byrow = FALSE)
-    }
-    
+
     return(Data)
 }
 
@@ -73,10 +83,10 @@ load_geno <- function(source_data, PLINK = TRUE, chr = NULL) {
 
 
 full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
-    
+
     Geno_norm <- as.numeric()
     cycles = floor(dim(geno_raw)[2]/max_size) + 1
-    
+
     for (i in 1:cycles) {
         starting = (i - 1) * max_size + 1
         ending = i * max_size
@@ -84,21 +94,21 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
             ending = dim(geno_raw)[2]
         }
         raw_Data = geno_raw[, starting:ending]
-        
+
         for (g in 1:dim(raw_Data)[2]) {
-            raw_Data[which(is.na(raw_Data[, g])), g] = mean(raw_Data[, 
+            raw_Data[which(is.na(raw_Data[, g])), g] = mean(raw_Data[,
                 g], na.rm = TRUE)
         }
-        Geno = matrix(as.numeric(raw_Data[, 1:dim(raw_Data)[2]]), 
+        Geno = matrix(as.numeric(raw_Data[, 1:dim(raw_Data)[2]]),
             nrow = dim(raw_Data)[1], byrow = FALSE)
-        
+
         n = dim(Geno)[1]
         m = dim(Geno)[2]
         for (i in 1:m) {
-            Geno[, i] = (Geno[, i] - mean(Geno[, i]))/stats::sd(Geno[, 
+            Geno[, i] = (Geno[, i] - mean(Geno[, i]))/stats::sd(Geno[,
                 i])
         }
-        
+
         Geno_norm = cbind(Geno_norm, Geno)
     }
     Geno_norm[is.na(Geno_norm)] = NAval
@@ -141,76 +151,74 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
 
 
 regionalLD <- function(geno_data, position = "start", size = 300) {
-    
+
     if (size < 1) {
         stop("The size of the region must be greater than 1.")
     }
     geno_data <- as.matrix(geno_data)
     size = as.integer(size)
-    
-    
-    
+
     if (position == "start") {
-        
+
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         for (i in 1:(size + 1)) {
             value = sum((R2_matrix[i, 1:(i + size)])^2)
             LDadj = c(LDadj, value)
         }
     }
-    
+
     if (position == "mid") {
-        
+
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         if ((snps - size) < (size + 2)) {
             stop("If the number of SNPs is small, please adjust the size accordingly.")
         }
-        
+
         for (i in (size + 2):(snps - size)) {
             value = sum((R2_matrix[i, (i - size):(i + size)])^2)
             LDadj = c(LDadj, value)
         }
     }
-    
+
     if (position == "end") {
-        
+
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         for (i in (snps - size + 1):snps) {
             value = sum((R2_matrix[i, (i - size):snps])^2)
             LDadj = c(LDadj, value)
         }
     }
-    
+
     if (position == "together") {
         size = as.integer(size)
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         for (i in 1:(size + 1)) {
             value = sum((R2_matrix[i, 1:(1 + size)])^2)
             LDadj = c(LDadj, value)
         }
-        
+
         if ((snps - size) > (size + 2)) {
             for (i in (size + 2):(snps - size)) {
                 value = sum((R2_matrix[i, (i - size):(i + size)])^2)
                 LDadj = c(LDadj, value)
             }
-            
+
             starting = snps - size + 1
             if (snps <= 2 * size) {
                 starting = size + 1
@@ -222,16 +230,16 @@ regionalLD <- function(geno_data, position = "start", size = 300) {
             value = sum((R2_matrix[i, (i - size):snps])^2)
             LDadj = c(LDadj, value)
         }
-        
+
     }
-    
+
     if (position == "short") {
-        
+
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         for (i in 1:(size + 1)) {
             ending = i + size
             if (ending > snps) {
@@ -240,30 +248,30 @@ regionalLD <- function(geno_data, position = "start", size = 300) {
             value = sum((R2_matrix[i, 1:ending])^2)
             LDadj = c(LDadj, value)
         }
-        
+
         starting = size + 2
         for (i in starting:snps) {
             value = sum((R2_matrix[i, (i - size):snps])^2)
             LDadj = c(LDadj, value)
         }
     }
-    
-    
+
+
     if (position == "all") {
-        
+
         individual = dim(geno_data)[1]
         R2_matrix = t(geno_data) %*% geno_data/individual
         snps = dim(R2_matrix)[2]
         LDadj = as.numeric()
-        
+
         for (i in 1:snps) {
             value = sum((R2_matrix[i, 1:snps])^2)
             LDadj = c(LDadj, value)
         }
-        
-        
+
+
     }
-    
+
     return(LDadj)
 }
 
@@ -290,13 +298,13 @@ regionalLD <- function(geno_data, position = "start", size = 300) {
 #'
 
 genomewideLD = function(geno_data, size = 300) {
-    
+
     if (size < 1) {
         stop("The size of the region must be greater than 1.")
     }
     geno_data <- as.matrix(geno_data)
     size = as.integer(size)
-    
+
     bin = 6 * as.integer(size)
     starting = 1
     ending = starting + bin
@@ -312,20 +320,20 @@ genomewideLD = function(geno_data, size = 300) {
         while (ending < geno_size) {
             geno_data_inter = geno_data[, starting:ending]
             if (starting == 1) {
-                LDadj = c(LDadj, regionalLD(geno_data_inter, 
+                LDadj = c(LDadj, regionalLD(geno_data_inter,
                   size = size, position = "start"))
             }
-            LDadj = c(LDadj, regionalLD(geno_data_inter, size = size, 
+            LDadj = c(LDadj, regionalLD(geno_data_inter, size = size,
                 position = "mid"))
-            
+
             starting = ending - size * 2
             ending = starting + bin
             if (ending > geno_size) {
                 ending = geno_size
                 geno_data_inter = geno_data[, starting:ending]
-                LDadj = c(LDadj, regionalLD(geno_data_inter, 
+                LDadj = c(LDadj, regionalLD(geno_data_inter,
                   size = size, position = "mid"))
-                LDadj = c(LDadj, regionalLD(geno_data_inter, 
+                LDadj = c(LDadj, regionalLD(geno_data_inter,
                   size = size, position = "end"))
             }
         }
