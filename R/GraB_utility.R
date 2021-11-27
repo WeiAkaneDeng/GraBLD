@@ -120,15 +120,15 @@ load_database = function(annotation_file, pos = 2) {
 #' @examples
 #' data(annotation_data)
 #' var_names <- colnames(annotation_data)
-#' formulas = get_formulas(name = 'BMI', var_names = var_names[2:5])
+#' formulas = get_formulas(name = 'BMI', normalized = FALSE, var_names = NULL)
 #' print(formulas)
 #'
 
 get_formulas = function(name, var_names) {
-   # var_names[1] = paste(name, "_univariate_Beta", sep = "")
-    formulas = paste(name, "_univariate_Beta ~ ", var_names[1],
-        sep = "")
-    if (length(var_names) >= 2) {
+
+    formulas = paste("target_beta_use ~ ", var_names[1], sep = "")
+
+        if (length(var_names) >= 2) {
         for (i in 2:length(var_names)) {
             formulas = paste(formulas, " + ", var_names[i],
                 sep = "")
@@ -146,36 +146,38 @@ get_formulas = function(name, var_names) {
 #' The function process the unviariate beta regression as well as the annotation data matrix and combine
 #'    the normalized data used for estimating the optimal boosted regression trees model.
 #'
-#' @param betas a matrix of regression coefficients from association analysis in the target population.
-#'   The first column is the chromosome for each SNP, and the column with the regression coefficient should be
-#'   specified by setting \code{pos}. The default value for \code{pos} is 2. The SNP IDs or other information
-#'   could be present as additional columns. Users need to prepare univariate association beta file without headers.
+#' @param betas a data matrix of regression coefficients from association analysis in the target population.
+#'   The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
+#'   regression coefficient ("target_beta"). The chromosome or other information could be present as
+#'   additional columns, but will not be used.
+#'
 #'   The betas were generated from the model: \cr
 #'     \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+#'     and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
 #'
 #'   Both genotype data and phenotype data over individuals need to be standardized
 #'   to have \code{mean} = 0 and \code{variance} = 1.
 #'
-#' @param pos an integer indicating which columns of the data matrix \code{annotations} is the corresponding consortium value and
-#'    additionally which columns should also be included.
-#'
-#'
-#' @param annotations a matrix of annotation variables used to update the \code{beta} values
+#' @param annotations a data matrix of annotation variables used to update the \code{beta} values
 #'   through gradient boosted regression tree models. Usually, this can be taken from the
 #'   summary-level test statistics of matching traits from genome-wide consortia available
-#'   online. The first column of the matrix must be the SNP IDs and the remaining columns could be
-#'   additional annotation information. The SNP IDs must be in the same order as those in \code{beta}.
+#'   online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
+#'   summary statistics ("annot_primary").
+#'   Additional columns for summary statistics or functional information can be included. Any column with names
+#'   containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
+#'   as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
+#'   target population.
 #'
-#' @param pos_sign an integer indicating which column of the data matrix \code{annotations} should be used to
-#'   update the sign of the univariate regression coefficient. Usually, it is set to be the consortium univariate
-#'   regression coefficient of the same trait.
+#'   For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
+#'   "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
+#'   coefficient of the same trait.
 #'
 #' @param abs_effect a vector of integers indicating which columns of the data matrix \code{annotations}
 #'   should be used as absolute effect by taking the absolute sign. For example, when only the strength of
 #'   the effect rather than the direction of the effect is informative for improving the polygenic score weights.
+#'   The default is "NULL", indicating no absolute effect is invoked.
 #'
-#' @param normalize a logic indicating whether the univariate beta regression coefficients in \code{beta} should be normalized with respect
-#'   to the consortium values in \code{annotations}.
+#' @param normalize a logic indicating whether the univariate beta regression coefficients in \code{beta} should be normalized with respect to the consortium values in \code{annotations}.
 #'
 #' @return a data matrix that can be directly used to estimate the optimal boosted regression trees model.
 #'
@@ -183,42 +185,48 @@ get_formulas = function(name, var_names) {
 #' data(annotation_data)
 #' get_data_num(betas = univariate_beta, annotations = annotation_data)
 #'
-#'
 
-get_data_num <- function(betas, annotations, pos = 2, pos_sign = 3,
-    abs_effect = 2:5, normalize = FALSE) {
+
+get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALSE) {
 
     if (is.null(betas) | is.null(annotations)) {
         stop("Please provide the univariate regression matrix as well as the annotation data matrix.")
     }
-    pos <- as.integer(pos)
-    pos_sign <- as.integer(pos_sign)
 
-    if (pos_sign < 2 | pos_sign > dim(annotations)[2]) {
-        stop("pos_sign must be after the SNP ID column AND less than the maximum number of columns in the annotation data matrix.")
+    if (sum(grepl("SNP|target_beta", names(betas))) < 2){
+        stop("Please make sure the betas has column name SNP and target_beta.")
     }
-    datas = cbind(betas[, pos], annotations[, 2:dim(annotations)[2]])
+    if (sum(grepl("SNP|annot_primary", names(annotations))) < 2){
+        stop("Please make sure the betas has column name SNP and annot_primary.")
+    }
 
-    data_num = matrix(data = NA, nrow = dim(datas)[1], ncol = dim(datas)[2])
+    print(paste("I find", sum(grepl("annot", names(annotations))), "annotation columns and",
+                sum(grepl("annot_primary", names(annotations))), "of thme is the primary."))
 
-    for (i in 1:dim(datas)[2]) {
+    if (!is.null(abs_effect)){
+        if (sum(grepl("annot_primary", names(annotations)[abs_effect]))==1){
+            print("The sign of the primary cannot be ignored, I will proceed with the remaining columns")
+        }
+        for (i in which(names(annotation) %in% names(annotations)[abs_effect])) {
+            norm_data_num[, i] <- abs(data_num[, i])
+        }
+        }
+
+    suppressMessages(datas <- plyr::join(betas, annotation))
+
+    data_num = datas[, grepl("SNP|annot|beta", names(datas))]
+
+    for (i in which(grepl("annot|beta", names(datas)))) {
         data_num[, i] <- as.numeric(as.character(datas[, i]))
     }
 
     if (normalize == TRUE) {
         norm_data_num <- data_num
-        sign_index <- sign(data_num[, pos_sign])
-        norm_data_num[, 1] <- sign_index * (data_num[, 1] -
-            data_num[, pos_sign])
+        sign_index <- sign(data_num[, names(data_num) %in% "annot_primary"])
+        norm_data_num$target_beta_update <- sign_index*(norm_data_num$target_beta-data_num[, names(data_num) %in% "annot_primary"])
 
-        if (1 %in% (abs_effect) | length(abs_effect) < 1) {
-            stop("Make sure the number of columns with absolute effects are valid.")
-        }
-
-        for (i in abs_effect) {
-            norm_data_num[, i] <- abs(data_num[, i])
-        }
         return(norm_data_num)
+
     } else {
 
         return(data_num)
@@ -238,35 +246,38 @@ get_data_num <- function(betas, annotations, pos = 2, pos_sign = 3,
 #'
 #' @param trait_name a character for the name of the quantitative trait, assuming the file is named as \code{trait_name_univariate_beta.txt}.
 #'
-#' @param betas a matrix of regression coefficients from association analysis in the target population.
-#'    The first column is the chromosome for each SNP, and the column with the regression coefficient should be
-#'    specified by setting \code{pos}. The default value for \code{pos} is 2. The SNP IDs or other information
-#'    could be present as additional columns. Users need to prepare univariate association beta file without headers.
-#'    The betas were generated from the model: \cr
-#'    \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+#' @param betas a data matrix of regression coefficients from association analysis in the target population.
+#'   The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
+#'   regression coefficient ("target_beta"). The chromosome or other information could be present as
+#'   additional columns, but will not be used.
 #'
-#'    Both genotype data and phenotype data over individuals need to be standardized
-#'    to have \code{mean} = 0 and \code{variance} = 1.
+#'   The betas were generated from the model: \cr
+#'     \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+#'     and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
 #'
-#' @param pos an integer indicating which columns of the data matrix \code{annotations} is the corresponding consortium value and
-#'    additionally which columns should also be included.
+#'   Both genotype data and phenotype data over individuals need to be standardized
+#'   to have \code{mean} = 0 and \code{variance} = 1.
 #'
-#' @param annotations a matrix of annotation variables used to update the \code{betas} values
+#' @param annotations a data matrix of annotation variables used to update the \code{beta} values
 #'   through gradient boosted regression tree models. Usually, this can be taken from the
 #'   summary-level test statistics of matching traits from genome-wide consortia available
-#'   online. The first column of the matrix must be the SNP IDs and the remaining columns could be
-#'   additional annotation information. The SNP IDs must be in the same order as those in \code{betas}.
+#'   online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
+#'   summary statistics ("annot_primary").
+#'   Additional columns for summary statistics or functional information can be included. Any column with names
+#'   containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
+#'   as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
+#'   target population.
 #'
-#' @param pos_sign an integer indicating which column of the data matrix \code{annotations} should be used to
-#'   update the sign of the univariate regression coefficient. Usually, it is set to be the consortium univariate
-#'   regression coefficient of the same trait.
+#'   For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
+#'   "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
+#'   coefficient of the same trait.
 #'
 #' @param abs_effect a vector of integers indicating which columns of the data matrix \code{annotations}
 #'   should be used as absolute effect by taking the absolute sign. For example, when only the strength of
 #'   the effect rather than the direction of the effect is informative for improving the polygenic score weights.
+#'   The default is "NULL", indicating no absolute effect is invoked.
 #'
-#' @param which.var a vector of integers indicating which columns of \code{annotations} should be included in the formula to
-#'    update the weights. Should be have at least length of two and can not take value 1 (the column for SNP ID).
+#' @param normalize a logic indicating whether the univariate beta regression coefficients in \code{beta} should be updated with respect to the consortium values in \code{annotations} in terms of directions of effect.
 #'
 #' @param steps an integer indicating the current cross-fold
 #'
@@ -358,8 +369,7 @@ get_data_num <- function(betas, annotations, pos = 2, pos_sign = 3,
 #'
 
 
-GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
-    abs_effect = 2:5, trait_name = NULL, which.var = 2:5,
+GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
     steps = 1, validation = 5, verbose = FALSE, interval = 200,
     sig = 1e-05, interact_depth = 5, shrink = 0.001, bag_frac = 0.5,
     max_tree = 2000, WRITE = FALSE) {
@@ -368,55 +378,32 @@ GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
     if (is.null(betas) | is.null(annotations)) {
         stop("Please provide the univariate regression matrix as well as the annotation data matrix.")
     }
-    pos <- as.integer(pos)
-    pos_sign <- as.integer(pos_sign)
 
-    if (pos_sign < 2 | pos_sign > dim(annotations)[2]) {
-        stop("pos_sign must be after the SNP ID column AND less than the maximum number of columns in the annotation data matrix.")
+    data_num_pr = get_data_num(betas = betas, annotations = annotations, abs_effect = abs_effect, normalize = normalize)
+
+    sign_index <- sign(data_num_pr$target_beta)
+
+    if ("target_beta_update" %in% names(data_num_pr)){
+        data_num_pr$target_beta_use <-  data_num_pr$target_beta_update
+    } else {
+    data_num_pr$target_beta_use <- data_num_pr$target_beta
     }
 
-    if (is.null(abs_effect) & is.null(which.var)) {
-        stop("Please supply the columns of predictors used to update the SNP weights.")
-    }
-
-    if (is.null(abs_effect)) {
-        abs_effect <- which.var
-    }
-
-    data_num_pre = get_data_num(betas = betas, annotations = annotations,
-        pos = pos, pos_sign = pos_sign, abs_effect = abs_effect)
-
-    GRS_adj_GIANT = data_num_pre[, 2]
-    sign_index <- sign(data_num_pre[, 2])
-
-    data_num = get_data_num(betas = betas, annotations = annotations,
-        pos = pos, pos_sign = pos_sign, abs_effect = abs_effect,
-        normalize = TRUE)  #
-
-    SNP_name = annotations[, 1]  #
-
-    nb_SNPs = floor(dim(data_num)[1]/validation)
+    nb_SNPs = floor(dim(data_num_pr)[1]/validation)
     results = as.numeric()
 
     starting = (steps - 1) * nb_SNPs + 1
     ending = steps * nb_SNPs
     if (steps == validation) {
-        ending = dim(data_num)[1]
+        ending = dim(data_num_pr)[1]
     }
 
-    if (is.null(which.var)) {
-        which.var <- abs_effect
-    }
-    var_names <- colnames(annotations)
-    formulas = get_formulas(name = trait_name, var_names = var_names[which.var])
-    var_names[1] = paste(trait_name, "_univariate_Beta", sep = "")
-   
-    data_num <- as.data.frame(data_num)
-    names(data_num) <- var_names
+    var_names <- colnames(data_num_pr)[grepl("annot", colnames(data_num_pr))]
+    formulas = get_formulas(name = trait_name, var_names = var_names)
 
-    data_predict <- as.data.frame(data_num[c(starting:ending),
+    data_predict <- as.data.frame(data_num_pr[c(starting:ending),
         ])
-    data_train = as.data.frame(data_num[-c(starting:ending),
+    data_train = as.data.frame(data_num_pr[-c(starting:ending),
         ])
 
 
@@ -424,17 +411,12 @@ GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
         data = data_train))
     var_index <- which(summary(lm1_variables)[["coefficients"]][,
         4] < sig)
-    if (var_index[1] == 1) {
-        var_index = var_index[-1]
-    }
-
-    formula_final = paste(trait_name, "_univariate_Beta ~ ",
-        var_names[var_index[1]], sep = "")
-
-    for (i in var_index[-1]) {
-        formula_final = paste(formula_final, " + ", var_names[i],
-            sep = "")
-    }
+    if (var_index[1] == 0) {
+        print("The significance threshold selected does not support additional variables to be included, only the primary will be included in the final model.")
+        formula_final = paste("target_beta_use ~ annot_primary")
+            } else {
+        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index[-1]-1], collapse = "+"))
+            }
 
     gbm1_diff2c <- gbm::gbm(stats::as.formula(formula_final),
         data = data_train, distribution = "gaussian", interaction.depth = interact_depth,
@@ -449,16 +431,16 @@ GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
         tree = i * interval
         gbm1_diff2c_predict <- gbm::predict.gbm(gbm1_diff2c,
             data_predict, n.trees = tree)
-        result = c(result, summary(stats::lm(data_predict[,
-            1] ~ gbm1_diff2c_predict))$adj.r.squared)
+        result = c(result, summary(stats::lm(data_predict$target_beta_use ~ gbm1_diff2c_predict))$adj.r.squared)
     }
 
     results = cbind(results, result)
 
-    GRS_adj_GIANT_all = GRS_adj_GIANT[starting:ending]
+    GRS_adj_GIANT_all = data_predict$target_beta[starting:ending]
     sign_index_predict = sign_index[starting:ending]
+    SNP_name <- as.character(data_num_pr$SNP[starting:ending])
 
-    best_nb_tree = which(max(results) == results) * interval
+    best_nb_tree = which(max(result) == result) * interval
 
     gbm1 <- gbm::gbm(stats::as.formula(formulas), data = data_train,
         distribution = "gaussian", interaction.depth = interact_depth,
@@ -466,6 +448,7 @@ GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
         n.cores = 1)
     gbm1_predict_all <- gbm::predict.gbm(gbm1, data_predict,
         n.trees = best_nb_tree) * sign_index_predict + GRS_adj_GIANT_all
+
 
     if (verbose == TRUE) {
 
@@ -477,7 +460,7 @@ GraB <- function(betas, annotations, pos = 2, pos_sign = 3,
             utils::write.table(gbm1_predict_all, paste(trait_name,
                 "_gbm_", steps, ".txt", sep = ""), col.names = F,
                 row.names = F, quote = F, sep = "\t")
-            utils::write.table(results, paste(trait_name, "_selectTrees.txt",
+            utils::write.table(result, paste(trait_name, "_selectTrees.txt",
                 sep = ""), col.names = F, row.names = F, quote = F,
                 sep = "\t")
 
