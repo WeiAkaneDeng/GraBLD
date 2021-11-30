@@ -4,7 +4,8 @@
 \name{geno}
 \alias{geno}
 \title{A genotype matrix.}
-\format{A data matrix with 5000 rows and 927 columns:
+\format{
+A data matrix with 5000 rows and 927 columns:
 \describe{
 %\item{FID}{Family ID}
 %\item{IID}{Within-family ID}
@@ -22,7 +23,8 @@ the phenotype data were match with .fam file (i.e. the number of
 individuals and the order of individuals should be same); The number
 of SNPs in prediction variable matrix \code{annotations} is matched with that
 in .bim data;
-}}
+}
+}
 \source{
 \url{http://zzz.bwh.harvard.edu/plink/}
 }

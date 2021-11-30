@@ -4,20 +4,17 @@
 \alias{load_geno}
 \title{Loading the genotype data.}
 \usage{
-load_geno(source_data, PLINK = TRUE, chr = NULL)
+load_geno(source_data, PLINKbin = TRUE)
 }
 \arguments{
 \item{source_data}{the name of the file which the genotype data are to be read from.
-Each row of the matrix appears as one line of the file. Could be an absolute path to the
-file or the name of the file assuming in the present directory \code{\link{getwd}()}.}
+Could be an absolute path to the file or the name of the file assuming in the
+present directory \code{\link{getwd}()}. In this case, the file name should be :
+  \code{source_data.raw}.
+  or
+  \code{source_data.bed}, \code{source_data.bim}, and \code{source_data.fam}.}
 
-\item{PLINK}{a logic indicating whether the supplied file is of the .raw format from PLINK, if not, the first six
-columns will not be removed and all columns will be read in.}
-
-\item{chr}{an integer indicating which chromosome is read in, this option is used in combination with
-\code{source_data}, to perform analysis by each chromosome. In this case, the file name should follow:
-\code{source_data_i.raw}. For example, \code{Geno_Matrix_1.raw} or \code{Geno_Matrix_23.raw} if all 23 files
-are available.}
+\item{PLINKbin}{a logic indicating whether the supplied file is of the .raw format from PLINK, if not, the first six columns will not be removed and all columns will be read in.}
 }
 \value{
 a data matrix of genotypes.

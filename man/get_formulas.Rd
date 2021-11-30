@@ -22,7 +22,7 @@ The function generates the formula to be used in regression trees model.
 \examples{
 data(annotation_data)
 var_names <- colnames(annotation_data)
-formulas = get_formulas(name = 'BMI', var_names = var_names[2:5])
+formulas = get_formulas(name = 'BMI', normalized = FALSE, var_names = NULL)
 print(formulas)
 
 }

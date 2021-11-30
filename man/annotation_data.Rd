@@ -4,14 +4,16 @@
 \name{annotation_data}
 \alias{annotation_data}
 \title{External Annotation.}
-\format{A data frame with 927 rows and 48 variables:
+\format{
+A data frame with 927 rows and 48 variables:
 \describe{
-  \item{SNP_ID}{SNP rs ID}
-  \item{BMI_beta_adj}{Standardized regression coefficient for association of a SNP and BMI obtained from external consortium GIANT}
-  \item{CARDIOGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and CAD obtained from external consortium CARDIOGRAM}
-  \item{DIAGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and T2D obtained from external consortium DIAGRAM}
-  \item{HDL_beta_adj}{Standardized regression coefficient for association of a SNP and HDL obtained from external consortium Global Lipids Genetics Consortium Results}
-}}
+  \item{SNP}{SNP rs ID}
+  \item{annot_primary}{Standardized regression coefficient for association of a SNP and BMI obtained from external consortium GIANT}
+  \item{annot_CARDIOGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and CAD obtained from external consortium CARDIOGRAM}
+  \item{annot_DIAGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and T2D obtained from external consortium DIAGRAM}
+  \item{annot_HDL_beta_adj}{Standardized regression coefficient for association of a SNP and HDL obtained from external consortium Global Lipids Genetics Consortium Results}
+}
+}
 \source{
 \url{http://www.diagram-consortium.org}
 \url{http://csg.sph.umich.edu/abecasis/public/lipids2013/}

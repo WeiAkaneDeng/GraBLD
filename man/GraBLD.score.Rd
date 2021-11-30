@@ -4,9 +4,20 @@
 \alias{GraBLD.score}
 \title{Gradient Boosted and LD adjusted Prediction.}
 \usage{
-GraBLD.score(source_data = NULL, chr = NULL, geno_raw, PLINK = TRUE,
-  SNPnames = NULL, max_size = 1e+05, NAval = NA, Pheno = NULL, LDadjVal,
-  gbmVal, trait_name = NULL, WRITE = FALSE)
+GraBLD.score(
+  source_data = NULL,
+  chr = NULL,
+  geno_raw,
+  PLINK = TRUE,
+  SNPnames = NULL,
+  max_size = 1e+05,
+  NAval = NA,
+  Pheno = NULL,
+  LDadjVal,
+  gbmVal,
+  trait_name = NULL,
+  WRITE = FALSE
+)
 }
 \arguments{
 \item{source_data}{the name of the file which the genotype data are to be read from.

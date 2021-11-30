@@ -7,16 +7,14 @@
 #'    matrix by removing the first 6 columns.
 #'
 #' @param source_data the name of the file which the genotype data are to be read from.
-#'    Each row of the matrix appears as one line of the file. Could be an absolute path to the
-#'    file or the name of the file assuming in the present directory \code{\link{getwd}()}.
+#'  Could be an absolute path to the file or the name of the file assuming in the
+#'  present directory \code{\link{getwd}()}. In this case, the file name should be :
+#'    \code{source_data.raw}.
+#'    or
+#'    \code{source_data.bed}, \code{source_data.bim}, and \code{source_data.fam}.
 #'
-#' @param PLINK a logic indicating whether the supplied file is of the .raw format from PLINK, if not, the first six
-#'    columns will not be removed and all columns will be read in.
+#' @param PLINKbin a logic indicating whether the supplied file is of the .raw format from PLINK, if not, the first six columns will not be removed and all columns will be read in.
 #'
-#' @param chr an integer indicating which chromosome is read in, this option is used in combination with
-#'    \code{source_data}, to perform analysis by each chromosome. In this case, the file name should follow:
-#'    \code{source_data_i.raw}. For example, \code{Geno_Matrix_1.raw} or \code{Geno_Matrix_23.raw} if all 23 files
-#'    are available.
 #'
 #' @return a data matrix of genotypes.
 #'
@@ -38,15 +36,12 @@ load_geno <- function(source_data, PLINKbin = TRUE) {
             install.packages("BGData", repos='http://cran.us.r-project.org', dependencies=T)
         }
 
-    library("BGData")
-    library("BEDMatrix")
-    bedFiles <- BEDMatrix(source_data)
-    bg <- as.BGData(bedFiles, alternatePhenotypeFile = paste(paste0(source_data), ".fam",sep=""))
-    Data <- geno(bg)
+    bedFiles <- BEDMatrix::BEDMatrix(source_data)
+    bg <- BGData::as.BGData(bedFiles, alternatePhenotypeFile = paste(paste0(source_data), ".fam",sep=""))
+    Data <- BGData::geno(bg)
 
     } else {
-        raw_Data = as.matrix(data.table::fread(paste(source_data,
-            chr, ".raw", sep = ""), header = T))
+        raw_Data = as.matrix(data.table::fread(paste(source_data,".raw", sep = ""), header = T))
         Data <- matrix(as.numeric(raw_Data[, 7:dim(raw_Data)[2]]),
                        nrow = dim(raw_Data)[1], byrow = FALSE)
         colnames(Data) <- names(raw_Data[, 7:dim(raw_Data)[2]])

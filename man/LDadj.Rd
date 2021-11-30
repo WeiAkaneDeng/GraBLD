@@ -4,8 +4,17 @@
 \alias{LDadj}
 \title{LD adjustment.}
 \usage{
-LDadj(source_data = NULL, geno_raw, size = 300, chr = NULL,
-  max_size = 1e+05, write = FALSE, outname = NULL, NAval = NA)
+LDadj(
+  source_data = NULL,
+  SNP_names = NULL,
+  geno_raw = NULL,
+  size = 300,
+  chr = NULL,
+  max_size = 1e+05,
+  write = FALSE,
+  outname = NULL,
+  NAval = NA
+)
 }
 \arguments{
 \item{source_data}{the name of the file which the genotype data are to be read from.

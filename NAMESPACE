@@ -1,1 +1,4 @@
 exportPattern("^[[:alpha:]]+")
+importFrom("utils", "install.packages", "installed.packages")
+importFrom("BGData")
+importFrom("BEDMatrix")

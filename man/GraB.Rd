@@ -4,44 +4,56 @@
 \alias{GraB}
 \title{Prediction using the Optimal Gradient Boosted Regression Trees using \code{\link[gbm]{gbm}}.}
 \usage{
-GraB(betas, annotations, pos = 2, pos_sign = 3, abs_effect = 2:5,
-  trait_name = NULL, which.var = 2:5, steps = 1, validation = 5,
-  verbose = FALSE, interval = 200, sig = 1e-05, interact_depth = 5,
-  shrink = 0.001, bag_frac = 0.5, max_tree = 2000, WRITE = FALSE)
+GraB(
+  betas,
+  annotations,
+  abs_effect = NULL,
+  trait_name = NULL,
+  steps = 1,
+  validation = 5,
+  verbose = FALSE,
+  interval = 200,
+  sig = 1e-05,
+  interact_depth = 5,
+  shrink = 0.001,
+  bag_frac = 0.5,
+  max_tree = 2000,
+  WRITE = FALSE
+)
 }
 \arguments{
-\item{betas}{a matrix of regression coefficients from association analysis in the target population.
-   The first column is the chromosome for each SNP, and the column with the regression coefficient should be
-   specified by setting \code{pos}. The default value for \code{pos} is 2. The SNP IDs or other information
-   could be present as additional columns. Users need to prepare univariate association beta file without headers.
-   The betas were generated from the model: \cr
-   \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+\item{betas}{a data matrix of regression coefficients from association analysis in the target population.
+  The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
+  regression coefficient ("target_beta"). The chromosome or other information could be present as
+  additional columns, but will not be used.
 
-   Both genotype data and phenotype data over individuals need to be standardized
-   to have \code{mean} = 0 and \code{variance} = 1.}
+  The betas were generated from the model: \cr
+    \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+    and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
 
-\item{annotations}{a matrix of annotation variables used to update the \code{betas} values
-through gradient boosted regression tree models. Usually, this can be taken from the
-summary-level test statistics of matching traits from genome-wide consortia available
-online. The first column of the matrix must be the SNP IDs and the remaining columns could be
-additional annotation information. The SNP IDs must be in the same order as those in \code{betas}.}
+  Both genotype data and phenotype data over individuals need to be standardized
+  to have \code{mean} = 0 and \code{variance} = 1.}
 
-\item{pos}{an integer indicating which columns of the data matrix \code{annotations} is the corresponding consortium value and
-additionally which columns should also be included.}
+\item{annotations}{a data matrix of annotation variables used to update the \code{beta} values
+  through gradient boosted regression tree models. Usually, this can be taken from the
+  summary-level test statistics of matching traits from genome-wide consortia available
+  online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
+  summary statistics ("annot_primary").
+  Additional columns for summary statistics or functional information can be included. Any column with names
+  containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
+  as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
+  target population.
 
-\item{pos_sign}{an integer indicating which column of the data matrix \code{annotations} should be used to
-update the sign of the univariate regression coefficient. Usually, it is set to be the consortium univariate
-regression coefficient of the same trait.}
+  For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
+  "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
+  coefficient of the same trait.}
 
 \item{abs_effect}{a vector of integers indicating which columns of the data matrix \code{annotations}
 should be used as absolute effect by taking the absolute sign. For example, when only the strength of
-the effect rather than the direction of the effect is informative for improving the polygenic score weights.}
+the effect rather than the direction of the effect is informative for improving the polygenic score weights.
+The default is "NULL", indicating no absolute effect is invoked.}
 
 \item{trait_name}{a character for the name of the quantitative trait, assuming the file is named as \code{trait_name_univariate_beta.txt}.}
-
-\item{which.var}{a vector of integers indicating which columns of \code{annotations} should be included in the formula to
-update the weights. Should be have at least length of two and can not take value 1 (the column for SNP ID). If not provided,
-it will be set to \code{abs_effect}.}
 
 \item{steps}{an integer indicating the current cross-fold}
 
@@ -70,6 +82,8 @@ The default used here is 2000.}
 
 \item{WRITE}{a logic indicating whether the results of the GraBLD weights should be written to a file with
 file name \code{trait_name_gbm_beta.txt}.}
+
+\item{normalize}{a logic indicating whether the univariate beta regression coefficients in \code{beta} should be updated with respect to the consortium values in \code{annotations} in terms of directions of effect.}
 }
 \value{
 a numeric vector of updated weights with length matching the number of SNPs.

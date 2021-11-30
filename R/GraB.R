@@ -93,8 +93,7 @@ GraBLD.score <- function(source_data = NULL, chr = NULL, geno_raw,
     } else {
 
         for (i in 1:chr) {
-            geno_pre_chr = load_geno(source_data, PLINK = PLINK,
-                chr = chr)
+            geno_pre_chr = load_geno(source_data, PLINKbin = PLINK)
             geno_norm_chr = full_normal_geno(geno_pre_chr,
                 NAval = NAval, max_size = max_size)
             geno_norm = cbind(geno_norm, geno_norm_chr)
