@@ -80,7 +80,9 @@ GraBLD.score <- function(source_data = NULL, chr = NULL, geno_raw,
     if (length(gbmVal) != dim(LDadjVal)[1]) {
         stop("Please ensure the length of the LD adjustments matches that of the gbm tuned weights.")
     } else {
-        gbm_adj = gbmVal/LDadjVal[, 2]
+        suppressMessages(datas <- plyr::join(gbmVal, LDadjVal))
+
+        gbm_adj = datas$weights/datas$LDadj
     }
 
     geno_norm = as.numeric()
@@ -89,6 +91,10 @@ GraBLD.score <- function(source_data = NULL, chr = NULL, geno_raw,
 
         geno_norm = full_normal_geno(geno_raw, NAval = NAval,
             max_size = max_size)
+        if (is.null(SNPnames)){
+            warning("SNP names not supplied, assuming they have been matched to the same order as the GraBLD weights.")
+        }
+
 
     } else {
 
@@ -104,6 +110,10 @@ GraBLD.score <- function(source_data = NULL, chr = NULL, geno_raw,
         stop("Please ensure the number of SNPs matches the length of the GraBLD weights.")
     }
 
+    suppressMessages(datas <- plyr::join(gbm_val_vec, LD_val))
+    gbm_adj = (datas$weights/datas$LDadj)[match(SNP_names, datas$SNP)]
+
+    gbm_adj[is.na(gbm_adj)] <- 0
     gene_score = as.matrix(geno_norm) %*% gbm_adj
 
     if (WRITE == TRUE) {

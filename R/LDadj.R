@@ -111,10 +111,10 @@ LDadj <- function(source_data = NULL, SNP_names = NULL, geno_raw = NULL, size = 
     LDadj <- genomewideLD(geno_norm, size = size)
     LDadj[which(LDadj < 1)] <- 1
     if (is.null(chr)){
-    LDadjs <- cbind(SNP_names, LDadj)
+    LDadjs <- cbind("SNP" = SNP_names, "LDadj" = LDadj)
     } else {
     chr_out <- rep(chr, length(LDadj))
-    LDadjs <- cbind(SNP_names, chr_out, LDadj)
+    LDadjs <- data.frame("SNP" = SNP_names, "CHR" = chr_out, "LDadj" = LDadj)
     }
 
     if (write == TRUE) {
