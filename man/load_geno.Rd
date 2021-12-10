@@ -10,9 +10,9 @@ load_geno(source_data, PLINKbin = TRUE)
 \item{source_data}{the name of the file which the genotype data are to be read from.
 Could be an absolute path to the file or the name of the file assuming in the
 present directory \code{\link{getwd}()}. In this case, the file name should be :
-  \code{source_data.raw}.
-  or
-  \code{source_data.bed}, \code{source_data.bim}, and \code{source_data.fam}.}
+\code{source_data.raw}.
+or
+\code{source_data.bed}, \code{source_data.bim}, and \code{source_data.fam}.}
 
 \item{PLINKbin}{a logic indicating whether the supplied file is of the .raw format from PLINK, if not, the first six columns will not be removed and all columns will be read in.}
 }
@@ -20,8 +20,9 @@ present directory \code{\link{getwd}()}. In this case, the file name should be :
 a data matrix of genotypes.
 }
 \description{
-The function automatically loads the genotype data matrix assuming each row
-   is an individual and each column is the genotype of a biallelic SNP. If
-   standard PLINK .raw file was provided, the function returns only the genotype
-   matrix by removing the first 6 columns.
+The function automatically loads the genotype data matrix assuming
+each row is an individual and each column is the genotype of a
+biallelic SNP. If standard PLINK .raw file was provided,
+the function returns only the genotype matrix by removing
+the first 6 columns.
 }

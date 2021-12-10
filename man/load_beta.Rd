@@ -4,12 +4,12 @@
 \alias{load_beta}
 \title{Load univariate regression beta coefficients.}
 \usage{
-load_beta(trait_name, file_name = NULL)
+load_beta(file_name, PLINK = TRUE)
 }
 \arguments{
-\item{trait_name}{a character for the name of the quantitative trait, assuming the file is named as \code{trait_name_univariate_beta.txt}.}
-
 \item{file_name}{a character to specify the full directory of the univariate regression coefficient file instead of \code{trait_name_univariate_beta.txt}.}
+
+\item{PLINK}{a logical indicating whether the summary regression coefficients are taken from PLINK2.0. The default is TRUE.}
 }
 \value{
 a data matrix of univariate regression coefficients.
@@ -19,8 +19,8 @@ The function loads the univariate regression beta coefficients into the workspac
 }
 \details{
 The univariate regression coefficients are assumed to be computed univariately using: \cr
-   \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}.
-   Both genotype data and phenotype data over individuals need to be standardized with
-   mean = 0 and variance = 1. The data file should have two columns indicating chromosome number
-   and the regression coefficients without headers.
+\code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}.
+Both genotype data and phenotype data over individuals need to be standardized with
+mean = 0 and variance = 1. The data file should have two columns indicating chromosome number
+and the regression coefficients without headers.
 }

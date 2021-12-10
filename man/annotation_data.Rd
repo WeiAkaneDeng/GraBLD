@@ -7,11 +7,11 @@
 \format{
 A data frame with 927 rows and 48 variables:
 \describe{
-  \item{SNP}{SNP rs ID}
-  \item{annot_primary}{Standardized regression coefficient for association of a SNP and BMI obtained from external consortium GIANT}
-  \item{annot_CARDIOGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and CAD obtained from external consortium CARDIOGRAM}
-  \item{annot_DIAGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and T2D obtained from external consortium DIAGRAM}
-  \item{annot_HDL_beta_adj}{Standardized regression coefficient for association of a SNP and HDL obtained from external consortium Global Lipids Genetics Consortium Results}
+\item{SNP}{SNP rs ID}
+\item{annot_primary}{Standardized regression coefficient for association of a SNP and BMI obtained from external consortium GIANT}
+\item{annot_CARDIOGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and CAD obtained from external consortium CARDIOGRAM}
+\item{annot_DIAGRAM_beta_adj}{Standardized regression coefficient for association of a SNP and T2D obtained from external consortium DIAGRAM}
+\item{annot_HDL_beta_adj}{Standardized regression coefficient for association of a SNP and HDL obtained from external consortium Global Lipids Genetics Consortium Results}
 }
 }
 \source{

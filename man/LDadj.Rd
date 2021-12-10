@@ -18,15 +18,15 @@ LDadj(
 }
 \arguments{
 \item{source_data}{the name of the file which the genotype data are to be read from.
-Each row of the matrix appears as one line of the file. Could be an absolute path to the
-file or the name of the file assuming in the present directory \code{\link{getwd}()}.}
+Each row of the matrix appears as one line of the file. Could be an absolute path to the file or the name of the file assuming in the present directory \code{\link{getwd}()}.}
+
+\item{SNP_names}{a vector of characters for the names of SNPs matching the corresponding genotype data, these are used in the output of GraBLD weights.}
 
 \item{geno_raw}{a matrix of the raw genotype data, contains \code{n} individuals (by row) and \code{m} SNPs (by column).
 Either \code{source_data} or \code{geno_raw} can be provided.}
 
 \item{size}{an integer for the number of SNPs that should be included in a block. Usually, for genome-wide
-datasets, there are about 2 million SNPs and +/- 300 SNPs is roughly equivalent to 1Mb
-physical distance, thus 300 is set as the default size.}
+datasets, there are about 2 million SNPs and +/- 300 SNPs is roughly equivalent to 1Mb physical distance, thus 300 is set as the default size.}
 
 \item{chr}{an integer for the chromosome of genotype data supplied,
 is not required and only used to name the output file. It is recommended to compute LD adjustments by
@@ -47,11 +47,11 @@ PLINK, set \code{NAval} = -9.}
 }
 \value{
 a numeric vector of LD adjustments with length matching the
-   number of SNPs in the genotype data provided.
+number of SNPs in the genotype data provided.
 }
 \description{
 The function calculates LD adjustment for each individual SNP based on the number of
-  up/down stream SNPs for genome-wide SNPs.
+up/down stream SNPs for genome-wide SNPs.
 }
 \details{
 For large datasets, it is recommended to run from the command line with \cr
@@ -76,18 +76,13 @@ LD_OUT <- LDadj(geno_raw = geno_norm, chr = chr, size = size, write = TRUE)}
 }
 \examples{
 data(geno)
-LDadj(geno_raw = geno, chr = 1, size = 200)
+LDadj(geno_raw = geno[grepl("rs", names(geno))],
+SNP_names = names(geno)[grepl("rs", names(geno))],
+chr = 1, size = 200)
 
 }
 \references{
-Guillaume Pare, Shihong Mao, Wei Q Deng (2017)
-A machine-learning heuristic to improve gene score prediction of
-polygenic traits Short title: Machine-learning boosted gene scores,
-\emph{bioRxiv 107409}; doi: \url{https://doi.org/10.1101/107409};
-\url{http://www.biorxiv.org/content/early/2017/02/09/107409}
+Paré, G., Mao, S. & Deng, W.Q. A machine-learning heuristic to improve gene score prediction of polygenic traits. \emph{Scientific reports} \strong{7}, 12665 (2017). \doi{10.1038/s41598-017-13056-1}.
 
-Pare, Guillaume, Shihong Mao, and Wei Q. Deng.
-A method to estimate the contribution of regional genetic
-associations to complex traits from summary association statistics.
-\emph{Scientific reports} \strong{6} (2016): 27644.
+Paré, G., Mao, S. & Deng, W.Q. A method to estimate the contribution of regional genetic associations to complex traits from summary association statistics.\emph{Scientific reports} \strong{6} (2016): 27644.
 }

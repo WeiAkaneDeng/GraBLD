@@ -8,30 +8,32 @@ get_data_num(betas, annotations, abs_effect = NULL, normalize = FALSE)
 }
 \arguments{
 \item{betas}{a data matrix of regression coefficients from association analysis in the target population.
-  The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
-  regression coefficient ("target_beta"). The chromosome or other information could be present as
-  additional columns, but will not be used.
+The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
+regression coefficient ("target_beta"). The chromosome or other information could be present as
+additional columns, but will not be used.
 
-  The betas were generated from the model: \cr
-    \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
-    and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
+The betas were generated from the model: \cr
+\code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
 
-  Both genotype data and phenotype data over individuals need to be standardized
-  to have \code{mean} = 0 and \code{variance} = 1.}
+Both genotype data and phenotype data over individuals need to be standardized
+to have \code{mean} = 0 and \code{variance} = 1.}
 
-\item{annotations}{a data matrix of annotation variables used to update the \code{beta} values
-  through gradient boosted regression tree models. Usually, this can be taken from the
-  summary-level test statistics of matching traits from genome-wide consortia available
-  online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
-  summary statistics ("annot_primary").
-  Additional columns for summary statistics or functional information can be included. Any column with names
-  containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
-  as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
-  target population.
+\item{annotations}{a data matrix of annotation variables used to update the
+\code{beta} values through gradient boosted regression tree models. Usually,
+this can be taken from the summary-level test statistics of matching traits
+from genome-wide consortia available online. The data must contain a minimum
+two columns, the SNP IDs (denoted by "SNP") and a column with the summary
+statistics ("annot_primary"). Additional columns for summary statistics
+or functional information can be included. Any column with names
+containing "annot" will be included in the gradient boosted regression tree
+model, but will not be treated as the primary annotation, which will be used to
+update the sign of the univariate regression coefficient in the target population.
 
-  For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
-  "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
-  coefficient of the same trait.}
+For example, the columns can be \cr
+"SNP", "annot_primary", "annot_trait1", "annot_trait2","annot_functional", etc.
+The "annot_primary" is usually the consortium univariate regression
+coefficient of the same trait.}
 
 \item{abs_effect}{a vector of integers indicating which columns of the data matrix \code{annotations}
 should be used as absolute effect by taking the absolute sign. For example, when only the strength of
@@ -45,10 +47,9 @@ a data matrix that can be directly used to estimate the optimal boosted regressi
 }
 \description{
 The function process the unviariate beta regression as well as the annotation data matrix and combine
-   the normalized data used for estimating the optimal boosted regression trees model.
+the normalized data used for estimating the optimal boosted regression trees model.
 }
 \examples{
 data(annotation_data)
 get_data_num(betas = univariate_beta, annotations = annotation_data)
-
 }

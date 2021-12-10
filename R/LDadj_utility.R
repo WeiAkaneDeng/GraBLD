@@ -1,10 +1,11 @@
 #'
 #' Loading the genotype data.
 #'
-#' The function automatically loads the genotype data matrix assuming each row
-#'    is an individual and each column is the genotype of a biallelic SNP. If
-#'    standard PLINK .raw file was provided, the function returns only the genotype
-#'    matrix by removing the first 6 columns.
+#' The function automatically loads the genotype data matrix assuming
+#' each row is an individual and each column is the genotype of a
+#' biallelic SNP. If standard PLINK .raw file was provided,
+#' the function returns only the genotype matrix by removing
+#' the first 6 columns.
 #'
 #' @param source_data the name of the file which the genotype data are to be read from.
 #'  Could be an absolute path to the file or the name of the file assuming in the
@@ -19,21 +20,24 @@
 #' @return a data matrix of genotypes.
 #'
 #' @importFrom data.table fread
-#'
+#' @import BGData
+#' @import BEDMatrix
+#' @importFrom utils installed.packages install.packages
+#' @export load_geno
 
 
 load_geno <- function(source_data, PLINKbin = TRUE) {
 
     if (PLINKbin) {
 
-        if("BEDMatrix" %in% rownames(installed.packages()) == FALSE) {
+        if("BEDMatrix" %in% rownames(utils::installed.packages()) == FALSE) {
             print("BEDMatrix not installed, trying to intall now ...")
-            install.packages("BEDMatrix", repos='http://cran.us.r-project.org')
+            utils::install.packages("BEDMatrix", repos='http://cran.us.r-project.org')
         }
 
-        if("BGData" %in% rownames(installed.packages()) == FALSE) {
+        if("BGData" %in% rownames(utils::installed.packages()) == FALSE) {
             print("BGData not installed, trying to intall now ...")
-            install.packages("BGData", repos='http://cran.us.r-project.org', dependencies=T)
+            utils::install.packages("BGData", repos='http://cran.us.r-project.org', dependencies=T)
         }
 
     bedFiles <- BEDMatrix::BEDMatrix(source_data)
@@ -69,12 +73,12 @@ load_geno <- function(source_data, PLINKbin = TRUE) {
 #'
 #' @return a data matrix of standardized genotypes.
 #'
-#' @importFrom stats sd
+#' @importFrom stats sd complete.cases
 #'
 #' @examples
 #' data(geno)
 #' norm_geno <- full_normal_geno(geno_raw = geno)
-#'
+#' @export full_normal_geno
 
 
 full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
@@ -90,21 +94,27 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
         }
         raw_Data = geno_raw[, starting:ending]
 
-        for (g in 1:dim(raw_Data)[2]) {
+        if (sum(stats::complete.cases(raw_Data))<dim(raw_Data)[1]){
+        ## imputing missing value by mean
+        for (g in which(!stats::complete.cases(raw_Data))) {
             raw_Data[which(is.na(raw_Data[, g])), g] = mean(raw_Data[,
                 g], na.rm = TRUE)
         }
-        Geno = matrix(as.numeric(raw_Data[, 1:dim(raw_Data)[2]]),
-            nrow = dim(raw_Data)[1], byrow = FALSE)
+        }
+
+        Geno = raw_Data
 
         n = dim(Geno)[1]
         m = dim(Geno)[2]
         for (i in 1:m) {
-            Geno[, i] = (Geno[, i] - mean(Geno[, i]))/stats::sd(Geno[,
-                i])
+            Geno[, i] = (Geno[, i] - mean(Geno[, i], na.rm=T))/min(stats::sd(Geno[,
+                i], na.rm=T), 10000)
+            ## just in case bad values,
+            ## the variance will make this observation negligible
         }
 
-        Geno_norm = cbind(Geno_norm, Geno)
+        #Geno_norm = cbind(Geno_norm, Geno)
+        Geno_norm = Geno
     }
     Geno_norm[is.na(Geno_norm)] = NAval
     return(Geno_norm)
@@ -116,16 +126,18 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
 #'
 #' Regional LD adjustment
 #'
-#' The function calculates the LD adjustment of each SNP for one given size of
-#'    genotype data block.
+#' The function calculates the LD adjustment of each SNP for
+#' one given size of genotype data block.
 #'
 #' @param geno_data the standardized genotype matrix assuming each row is the individual and each column is the SNP.
 #'
-#' @param size an integer for the number of SNPs that should be included in a block. Usually, for genome-wide
-#'    datasets, there are about 2 million SNPs and +/- 300 SNPs is roughly equivalent to 1Mb
-#'    physical distance, thus 300 is set as the default size.
+#' @param size an integer for the number of SNPs that should
+#' be included in a block. Usually, for genome-wide datasets,
+#' there are about 2 million SNPs and +/- 300 SNPs is roughly
+#' equivalent to 1Mb physical distance, thus 300 is set as
+#' the default size.
 #'
-#' @param position a character indicating the position of the SNP in a block of SNPs, one of
+#' @param position a character indicating the position of the SNP in a block of SNPs, one of\cr
 #'    \code{start} (the start of the block), \code{mid} (the middle of the block),
 #'    \code{end} (the end of the block), or \code{together} (combining SNPs in a few blocks),
 #'    \code{short} (in a short block), or \code{all} (using all regions).
@@ -139,9 +151,11 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
 #'
 #' @examples
 #' data(geno)
-#' norm_geno <- full_normal_geno(geno_raw = geno)
+#' norm_geno <- full_normal_geno(geno_raw = geno[,-c(1:6)])
 #' regLD <- regionalLD(geno_data = norm_geno, position = 'mid', size = 300)
 #' print(regLD)
+#'
+#' @export regionalLD
 #'
 
 
@@ -275,14 +289,16 @@ regionalLD <- function(geno_data, position = "start", size = 300) {
 #'
 #' Genome-wide LD adjustment
 #'
-#' The function compute the LD adjustment on the entire genotype data matrix by
-#'    first dividing them into SNP blocks.
+#' The function compute the LD adjustment on the entire
+#' genotype data matrix by first dividing them into SNP blocks.
 #'
 #' @param geno_data the standardized genotype matrix assuming each row is the individual and each column is the SNP.
 #'
-#' @param size an integer for the number of SNPs that should be included in a block. Usually, for genome-wide
-#'    datasets, there are about 2 million SNPs and +/- 300 SNPs is roughly equivalent to 1Mb
-#'    physical distance, thus 300 is set as the default size.
+#' @param size an integer for the number of SNPs that should be
+#' included in a block. Usually, for genome-wide datasets,
+#' there are about 2 million SNPs and +/- 300 SNPs
+#' is roughly equivalent to 1Mb physical distance,
+#' thus 300 is set as the default size.
 #'
 #' @return a numeric vector of LD adjustments for all SNPs in the genotype matrix.
 #'
@@ -291,8 +307,10 @@ regionalLD <- function(geno_data, position = "start", size = 300) {
 #' associations to complex traits from summary association statistics.
 #' \emph{Scientific reports} \strong{6} (2016): 27644.
 #'
+#' @export genomewideLD
+#'
 
-genomewideLD = function(geno_data, size = 300) {
+genomewideLD <- function(geno_data, size = 300) {
 
     if (size < 1) {
         stop("The size of the region must be greater than 1.")

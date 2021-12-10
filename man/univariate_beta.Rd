@@ -10,12 +10,12 @@ A data frame with 927 rows and 2 variables:
 The univariate regression coefficients were computed from the simulated
 datasets \code{BMI} and \code{geno} using: \cr
 
-   \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}.
+\code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}.
 
 Both genotype data and phenotype data over individuals need to be standardized with mean = 0 and variance = 1.
-  \item{SNP}{SNP name}
-  \item{target_beta}{BMI univariate regression coefficient}
-  ...
+\item{SNP}{SNP name}
+\item{target_beta}{BMI univariate regression coefficient}
+...
 }
 }
 \usage{

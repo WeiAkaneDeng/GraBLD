@@ -20,10 +20,9 @@ a data matrix of standardized genotypes.
 }
 \description{
 The function standardizes a genotype data such that for each SNP the mean is 0 and standard
-   deviation is 1.
+deviation is 1.
 }
 \examples{
 data(geno)
 norm_geno <- full_normal_geno(geno_raw = geno)
-
 }

@@ -18,35 +18,36 @@ GraB(
   shrink = 0.001,
   bag_frac = 0.5,
   max_tree = 2000,
-  WRITE = FALSE
+  WRITE = FALSE,
+  normalize = TRUE
 )
 }
 \arguments{
 \item{betas}{a data matrix of regression coefficients from association analysis in the target population.
-  The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
-  regression coefficient ("target_beta"). The chromosome or other information could be present as
-  additional columns, but will not be used.
+The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and the column with the
+regression coefficient ("target_beta"). The chromosome or other information could be present as
+additional columns, but will not be used.
 
-  The betas were generated from the model: \cr
-    \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
-    and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
+The betas were generated from the model: \cr
+\code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}
+and appropriately adjusting for necessary covariates, such as age, sex, and principal component covariates.
 
-  Both genotype data and phenotype data over individuals need to be standardized
-  to have \code{mean} = 0 and \code{variance} = 1.}
+Both genotype data and phenotype data over individuals need to be standardized
+to have \code{mean} = 0 and \code{variance} = 1.}
 
 \item{annotations}{a data matrix of annotation variables used to update the \code{beta} values
-  through gradient boosted regression tree models. Usually, this can be taken from the
-  summary-level test statistics of matching traits from genome-wide consortia available
-  online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
-  summary statistics ("annot_primary").
-  Additional columns for summary statistics or functional information can be included. Any column with names
-  containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
-  as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
-  target population.
+through gradient boosted regression tree models. Usually, this can be taken from the
+summary-level test statistics of matching traits from genome-wide consortia available
+online. The data must contain a minimum two columns, the SNP IDs (denoted by "SNP") and a column with the
+summary statistics ("annot_primary").
+Additional columns for summary statistics or functional information can be included. Any column with names
+containing "annot" will be included in the gradient boosted regression tree model, but will not be treated
+as the primary annotation, which is used to update the sign of the univariate regression coefficient in the
+target population.
 
-  For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
-  "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
-  coefficient of the same trait.}
+For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
+"annot_functional", etc. The "annot_primary" is usually the consortium univariate regression
+coefficient of the same trait.}
 
 \item{abs_effect}{a vector of integers indicating which columns of the data matrix \code{annotations}
 should be used as absolute effect by taking the absolute sign. For example, when only the strength of
@@ -90,7 +91,7 @@ a numeric vector of updated weights with length matching the number of SNPs.
 }
 \description{
 The function returns the prediction of the polygenic gene score weights based on the optimal gradient boosted
-   regression trees model.
+regression trees model.
 }
 \details{
 For large datasets, it is recommended to run from the command line with \cr
@@ -141,9 +142,5 @@ GraB(betas = univariate_beta, annotations = annotation_data,
 \references{
 Greg Ridgeway with contributions from others (2015). gbm: Generalized Boosted Regression Models. R package version 2.1.1. \url{https://CRAN.R-project.org/package=gbm}
 
-Guillaume Pare, Shihong Mao, Wei Q Deng (2017)
-A machine-learning heuristic to improve gene score prediction of
-polygenic traits Short title: Machine-learning boosted gene scores,
-\emph{bioRxiv 107409}; doi: \url{https://doi.org/10.1101/107409};
-\url{http://www.biorxiv.org/content/early/2017/02/09/107409}
+Paré, G., Mao, S. & Deng, W.Q. A machine-learning heuristic to improve gene score prediction of polygenic traits. \emph{Scientific reports} \strong{7}, 12665 (2017). \doi{10.1038/s41598-017-13056-1}.
 }

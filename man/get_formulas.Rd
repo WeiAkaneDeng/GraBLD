@@ -14,7 +14,7 @@ It should match the trait name used in the other analyses.}
 }
 \value{
 a formula specifying the response variable (univariate regression coefficients from target population)
-   and the predictors are used to tune the weights in boosted regression trees model.
+and the predictors are used to tune the weights in boosted regression trees model.
 }
 \description{
 The function generates the formula to be used in regression trees model.
@@ -22,7 +22,6 @@ The function generates the formula to be used in regression trees model.
 \examples{
 data(annotation_data)
 var_names <- colnames(annotation_data)
-formulas = get_formulas(name = 'BMI', normalized = FALSE, var_names = NULL)
+formulas = get_formulas(name = 'BMI', var_names = var_names[-1])
 print(formulas)
-
 }

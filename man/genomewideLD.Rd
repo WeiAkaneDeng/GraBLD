@@ -9,16 +9,18 @@ genomewideLD(geno_data, size = 300)
 \arguments{
 \item{geno_data}{the standardized genotype matrix assuming each row is the individual and each column is the SNP.}
 
-\item{size}{an integer for the number of SNPs that should be included in a block. Usually, for genome-wide
-datasets, there are about 2 million SNPs and +/- 300 SNPs is roughly equivalent to 1Mb
-physical distance, thus 300 is set as the default size.}
+\item{size}{an integer for the number of SNPs that should be
+included in a block. Usually, for genome-wide datasets,
+there are about 2 million SNPs and +/- 300 SNPs
+is roughly equivalent to 1Mb physical distance,
+thus 300 is set as the default size.}
 }
 \value{
 a numeric vector of LD adjustments for all SNPs in the genotype matrix.
 }
 \description{
-The function compute the LD adjustment on the entire genotype data matrix by
-   first dividing them into SNP blocks.
+The function compute the LD adjustment on the entire
+genotype data matrix by first dividing them into SNP blocks.
 }
 \references{
 Pare, Guillaume, Shihong Mao, and Wei Q. Deng.

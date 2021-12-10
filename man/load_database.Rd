@@ -4,15 +4,12 @@
 \alias{load_database}
 \title{Load annotations.}
 \usage{
-load_database(annotation_file, pos = 2)
+load_database(annotation_file)
 }
 \arguments{
 \item{annotation_file}{the directory to a \code{data.frame} of annotation variables used to update the \code{beta} values
 through gradient boosted regression tree models. The first column of the matrix must be the SNP IDs and the remaining columns could be
 additional annotation information. The SNP IDs must be in the same order as those in \code{beta}.}
-
-\item{pos}{an integer indicating which columns of the data matrix \code{annotations} is the corresponding consortium value and
-additionally which columns should also be included.}
 }
 \value{
 a data frame of predictor variables that can be used to update SNPs weights.
@@ -21,16 +18,22 @@ a data frame of predictor variables that can be used to update SNPs weights.
 The function loads the annotation predictor variables into the workspace.
 }
 \details{
-The annotation matrix provides the necessary predictor variables used to update the weights of
-   polygenic gene score via gradient boosted regression tree. The data.frame should have at least two columns,
-   the first column is SNP_ID; the rest are the adjusted consortia regression coefficient or summary statistics.
-   It is recommended to adjust the consortia regression coefficient by the minor allele frequency of the SNP: \cr
-   \preformatted{
-   SNP_SD = sqrt(2 * as.numeric(MAF[,5]) * (1 - as.numeric(MAF[,5])))
+The annotation matrix provides the necessary predictor variables
+used to update the weights of polygenic gene score via gradient boosted
+regression tree. The data.frame should have at least two columns,\cr
+the first column is SNP;
+the rest are the adjusted consortia regression coefficient or summary statistics.
+It is recommended to adjust the consortia regression coefficient by the
+minor allele frequency of the SNP: \cr
+\preformatted{
+   SNP_SD = sqrt(2 * as.numeric(MAF) * (1 - as.numeric(MAF)))
    beta_adj = as.numeric(beta) * SNP_SD
    }
-   For any one trait, at least one column of corresponding adjusted beta from the consortium is required.
-   For instance, if we work on BMI, at least the adjusted regression coefficient for association with BMI in
-   a consortium study should be provided. Additional annotations such as related regression coefficients of other
-   traits, or SNP functional annotations can also be included.
+For any one trait, at least one column of corresponding adjusted beta from
+the consortium is required (and has the column name annot_primary).
+For instance, if we work on BMI, at least the adjusted regression coefficient
+for association with BMI in a consortium study should be provided.
+Additional annotations such as related regression coefficients of other
+traits, or SNP functional annotations can also be included
+(in the format of annot_*).
 }

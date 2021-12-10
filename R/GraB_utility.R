@@ -28,9 +28,9 @@ get_NAs = function(data, NA_value = "NaN") {
 #'
 #' The function loads the univariate regression beta coefficients into the workspace.
 #'
-#' @param trait_name a character for the name of the quantitative trait, assuming the file is named as \code{trait_name_univariate_beta.txt}.
 #'
 #' @param file_name a character to specify the full directory of the univariate regression coefficient file instead of \code{trait_name_univariate_beta.txt}.
+#' @param PLINK a logical indicating whether the summary regression coefficients are taken from PLINK2.0. The default is TRUE.
 #'
 #' @details The univariate regression coefficients are assumed to be computed univariately using: \cr
 #'    \code{coef(summary(lm(pheno_data ~ geno[,j])))[2,1]}.
@@ -41,6 +41,7 @@ get_NAs = function(data, NA_value = "NaN") {
 #' @return a data matrix of univariate regression coefficients.
 #'
 #' @importFrom utils read.table
+#' @export load_beta
 #'
 
 load_beta <- function(file_name, PLINK=TRUE) {
@@ -69,9 +70,6 @@ load_beta <- function(file_name, PLINK=TRUE) {
 #'   through gradient boosted regression tree models. The first column of the matrix must be the SNP IDs and the remaining columns could be
 #'   additional annotation information. The SNP IDs must be in the same order as those in \code{beta}.
 #'
-#' @param pos an integer indicating which columns of the data matrix \code{annotations} is the corresponding consortium value and
-#'    additionally which columns should also be included.
-#'
 #' @details The annotation matrix provides the necessary predictor variables
 #' used to update the weights of polygenic gene score via gradient boosted
 #' regression tree. The data.frame should have at least two columns,\cr
@@ -94,6 +92,7 @@ load_beta <- function(file_name, PLINK=TRUE) {
 #' @return a data frame of predictor variables that can be used to update SNPs weights.
 #'
 #' @importFrom data.table fread
+#' @export load_database
 #'
 
 
@@ -127,8 +126,9 @@ load_database = function(annotation_file) {
 #' @examples
 #' data(annotation_data)
 #' var_names <- colnames(annotation_data)
-#' formulas = get_formulas(name = 'BMI', normalized = FALSE, var_names = NULL)
+#' formulas = get_formulas(name = 'BMI', var_names = var_names[-1])
 #' print(formulas)
+#' @export get_formulas
 #'
 
 get_formulas = function(name, var_names) {
@@ -178,7 +178,7 @@ get_formulas = function(name, var_names) {
 #'
 #'   For example, the columns can be \cr
 #'   "SNP", "annot_primary", "annot_trait1", "annot_trait2","annot_functional", etc.
-#'   The "annot_primiary" is usually the consortium univariate regression
+#'   The "annot_primary" is usually the consortium univariate regression
 #'   coefficient of the same trait.
 #'
 #' @param abs_effect a vector of integers indicating which columns of the data matrix \code{annotations}
@@ -193,7 +193,7 @@ get_formulas = function(name, var_names) {
 #' @examples
 #' data(annotation_data)
 #' get_data_num(betas = univariate_beta, annotations = annotation_data)
-#'
+#' @export get_data_num
 
 
 get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALSE) {
@@ -209,7 +209,7 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
         stop("Please make sure the betas has column name SNP and annot_primary.")
     }
 
-    print(paste("I find", sum(grepl("annot", names(annotations))), "annotation columns and", sum(grepl("annot_primary", names(annotations))), "of thme is the primary."))
+    print(paste("I find", sum(grepl("annot", names(annotations))), "annotation columns and", sum(grepl("annot_primary", names(annotations))), "of them is the primary."))
 
     if (!is.null(abs_effect)){
         if (sum(grepl("annot_primary", names(annotations)[abs_effect]))==1){
@@ -277,7 +277,7 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 #'   target population.
 #'
 #'   For example, the columns can be "SNP", "annot_primary", "annot_trait1", "annot_trait2",
-#'   "annot_functional", etc. The "annot_primiary" is usually the consortium univariate regression
+#'   "annot_functional", etc. The "annot_primary" is usually the consortium univariate regression
 #'   coefficient of the same trait.
 #'
 #' @param abs_effect a vector of integers indicating which columns of the data matrix \code{annotations}
@@ -318,15 +318,18 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 #' @return a numeric vector of updated weights with length matching the number of SNPs.
 #'
 #' @importFrom gbm gbm
-#' @importFrom stats as.formula, lm
+#' @importFrom stats as.formula lm
 #' @importFrom utils write.table
 #'
 #' @examples
 #' data(univariate_beta)
 #' data(annotation_data)
-#' GraB(betas = univariate_beta, annotations = annotation_data,
-#'    trait_name = 'BMI', steps = 2, validation = 5)
+#' GraB(betas = univariate_beta,
+#' annotations = annotation_data,
+#' trait_name = 'BMI', steps = 2,
+#' alidation = 5)
 #'
+#' @export GraB
 #' @details
 #' For large datasets, it is recommended to run from the command line with \cr
 #'
@@ -361,19 +364,17 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 #'  betas = load_beta(trait_name)
 #'  annotation = load_database(annotations_file, pos = 2:3)
 #'  geno <- load_geno(geno_data)
-#'  GraB(betas = betas, annotations = annotation,
+#'  GraB(betas = betas,
+#'  annotations = annotation,
 #'    trait_name = trait_name, steps = steps, validation = validation,
 #'    interval = 200, sig = 1e-05, interact_depth = p1, shrink = p2,
 #'    bag_frac = p3, max_tree = p4, WRITE = TRUE)}
 #'
 #'
+#'
 #' @references Greg Ridgeway with contributions from others (2015). gbm: Generalized Boosted Regression Models. R package version 2.1.1. \url{https://CRAN.R-project.org/package=gbm}
 #'
-#'Guillaume Pare, Shihong Mao, Wei Q Deng (2017)
-#' A machine-learning heuristic to improve gene score prediction of
-#' polygenic traits Short title: Machine-learning boosted gene scores,
-#' \emph{bioRxiv 107409}; doi: \url{https://doi.org/10.1101/107409};
-#' \url{http://www.biorxiv.org/content/early/2017/02/09/107409}
+#' @references Paré, G., Mao, S. & Deng, W.Q. A machine-learning heuristic to improve gene score prediction of polygenic traits. \emph{Scientific reports} \strong{7}, 12665 (2017). \doi{10.1038/s41598-017-13056-1}.
 #'
 
 
@@ -389,12 +390,12 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
 
     data_num_pr = get_data_num(betas = betas, annotations = annotations, abs_effect = abs_effect, normalize = normalize)
 
-    sign_index <- sign(data_num_pr$target_beta)
+    sign_index <- sign(data_num_pr$annot_primary)
 
     if ("target_beta_update" %in% names(data_num_pr)){
         data_num_pr$target_beta_use <-  data_num_pr$target_beta_update
     } else {
-        data_num_pr$target_beta_use <- data_num_pr$target_beta
+        data_num_pr$target_beta_use <- (data_num_pr$target_beta-data_num_pr$annot_primary)
     }
 
     nb_SNPs = floor(dim(data_num_pr)[1]/validation)
@@ -419,6 +420,7 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
         data = data_train))
     var_index <- which(summary(lm1_variables)[["coefficients"]][,
         4] < sig)
+
     if (var_index[1] == 0) {
         print("The significance threshold selected does not support additional variables to be included, only the primary will be included in the final model.")
         formula_final = paste("target_beta_use ~ annot_primary")
@@ -427,7 +429,8 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
             }
 
     gbm1_diff2c <- gbm::gbm(stats::as.formula(formula_final),
-        data = data_train, distribution = "gaussian", interaction.depth = interact_depth,
+        data = data_train, distribution = "gaussian",
+        interaction.depth = interact_depth,
         shrinkage = shrink, bag.fraction = bag_frac, n.trees = max_tree,
         n.cores = 1)
 
@@ -444,7 +447,7 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
 
     results = cbind(results, result)
 
-    GRS_adj_GIANT_all = data_predict$target_beta[starting:ending]
+    GRS_adj_GIANT_all = data_predict$target_beta
     sign_index_predict = sign_index[starting:ending]
     SNP_name <- as.character(data_num_pr$SNP[starting:ending])
 
@@ -484,13 +487,13 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
         if (WRITE == TRUE) {
 
             utils::write.table(data.frame("SNP" = SNP_name,
-                                          "weights" = gbm1_predict_all),
+                                          "GraB" = gbm1_predict_all),
              paste(trait_name, "_gbm_", steps, ".txt", sep = ""), col.names = F,
                 row.names = F, quote = F, sep = "\t")
 
         } else {
 
-            return(weights = data.frame("SNP" = SNP_name, "weights" = gbm1_predict_all))
+            return(weights = data.frame("SNP" = SNP_name, "GraB" = gbm1_predict_all))
 
         }
     }
