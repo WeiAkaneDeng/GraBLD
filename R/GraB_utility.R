@@ -327,7 +327,7 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 #' GraB(betas = univariate_beta,
 #' annotations = annotation_data,
 #' trait_name = 'BMI', steps = 2,
-#' alidation = 5)
+#' validation = 5)
 #'
 #' @export GraB
 #' @details

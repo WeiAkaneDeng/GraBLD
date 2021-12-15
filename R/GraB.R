@@ -87,10 +87,6 @@ GraBLD.score <- function(source_data = NULL, SNP_names = NULL,
 
         geno_norm = full_normal_geno(geno_raw, NAval = NAval,
             max_size = max_size)
-        if (is.null(SNP_names)){
-            warning("SNP names not supplied, assuming they have been matched to the same order as the GraBLD weights.")
-        }
-
 
     } else {
 
@@ -107,10 +103,17 @@ GraBLD.score <- function(source_data = NULL, SNP_names = NULL,
     }
 
     suppressMessages(datas <- plyr::join(gbmVal, LDadjVal))
+
+    if (is.null(SNP_names)){
+     gbm_adj = (datas$GraB/datas$LDadj)
+      warning("SNP names not supplied, assuming they have been matched to the same order as the GraBLD weights.")
+    } else {
     gbm_adj = (datas$GraB/datas$LDadj)[match(SNP_names, datas$SNP)]
+    }
+
 
     gbm_adj[is.na(gbm_adj)] <- 0
-    gene_score = as.matrix(geno_norm) %*% gbm_adj
+    gene_score = as.matrix(geno_norm) %*% as.vector(gbm_adj)
 
     if (WRITE == TRUE) {
 

@@ -127,7 +127,8 @@ geno_data = args[1]
  betas = load_beta(trait_name)
  annotation = load_database(annotations_file, pos = 2:3)
  geno <- load_geno(geno_data)
- GraB(betas = betas, annotations = annotation,
+ GraB(betas = betas,
+ annotations = annotation,
    trait_name = trait_name, steps = steps, validation = validation,
    interval = 200, sig = 1e-05, interact_depth = p1, shrink = p2,
    bag_frac = p3, max_tree = p4, WRITE = TRUE)}
@@ -135,8 +136,10 @@ geno_data = args[1]
 \examples{
 data(univariate_beta)
 data(annotation_data)
-GraB(betas = univariate_beta, annotations = annotation_data,
-   trait_name = 'BMI', steps = 2, validation = 5)
+GraB(betas = univariate_beta,
+annotations = annotation_data,
+trait_name = 'BMI', steps = 2,
+validation = 5)
 
 }
 \references{
