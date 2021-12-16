@@ -97,8 +97,8 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
         if (sum(stats::complete.cases(raw_Data))<dim(raw_Data)[1]){
         ## imputing missing value by mean
         for (g in which(!stats::complete.cases(raw_Data))) {
-            raw_Data[which(is.na(raw_Data[, g])), g] = mean(raw_Data[,
-                g], na.rm = TRUE)
+            raw_Data[g,which(is.na(raw_Data[, g]))] = mean(raw_Data[g,
+                ], na.rm = TRUE)
         }
         }
 
