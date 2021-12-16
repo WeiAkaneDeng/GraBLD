@@ -84,7 +84,7 @@ load_geno <- function(source_data, PLINKbin = TRUE) {
 full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
 
     Geno_norm <- as.numeric()
-    cycles = floor(dim(geno_raw)[2]/max_size) + 1
+    cycles <- floor(dim(geno_raw)[2]/max_size) + 1
 
     for (i in 1:cycles) {
         starting = (i - 1) * max_size + 1
@@ -97,7 +97,7 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
         if (sum(stats::complete.cases(raw_Data))<dim(raw_Data)[1]){
         ## imputing missing value by mean
         for (g in which(!stats::complete.cases(raw_Data))) {
-            raw_Data[g,which(is.na(raw_Data[, g]))] = mean(raw_Data[g,
+            raw_Data[g, which(is.na(raw_Data[g,]))] = mean(raw_Data[g,
                 ], na.rm = TRUE)
         }
         }
