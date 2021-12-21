@@ -106,6 +106,7 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
 
         n = dim(Geno)[1]
         m = dim(Geno)[2]
+
         for (i in 1:m) {
             Geno[, i] = (Geno[, i] - mean(Geno[, i], na.rm=T))/min(stats::sd(Geno[,
                 i], na.rm=T), 10000)
@@ -113,8 +114,8 @@ full_normal_geno <- function(geno_raw, max_size = 1e+05, NAval = NA) {
             ## the variance will make this observation negligible
         }
 
-        #Geno_norm = cbind(Geno_norm, Geno)
-        Geno_norm = Geno
+        Geno_norm = cbind(Geno_norm, Geno)
+        #Geno_norm = Geno
     }
     Geno_norm[is.na(Geno_norm)] = NAval
     return(Geno_norm)
