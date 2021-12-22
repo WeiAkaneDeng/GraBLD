@@ -381,7 +381,7 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
     steps = 1, validation = 5, verbose = FALSE, interval = 200,
     sig = 1e-05, interact_depth = 5, shrink = 0.001, bag_frac = 0.5,
-    max_tree = 2000, WRITE = FALSE, normalize=TRUE) {
+    max_tree = 2000, WRITE = FALSE, normalize=TRUE, nCore = 1) {
 
 
     if (is.null(betas) | is.null(annotations)) {
@@ -425,14 +425,14 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
         print("The significance threshold selected does not support additional variables to be included, only the primary will be included in the final model.")
         formula_final = paste("target_beta_use ~ annot_primary")
             } else {
-        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index-1], collapse = "+"))
+        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index], collapse = "+"))
             }
 
     gbm1_diff2c <- gbm::gbm(stats::as.formula(formula_final),
         data = data_train, distribution = "gaussian",
         interaction.depth = interact_depth,
         shrinkage = shrink, bag.fraction = bag_frac, n.trees = max_tree,
-        n.cores = 1)
+        n.cores = nCore)
 
     result = as.numeric()
 
