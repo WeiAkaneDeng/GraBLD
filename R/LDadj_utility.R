@@ -1,4 +1,4 @@
-#'
+##'
 #' Loading the genotype data.
 #'
 #' The function automatically loads the genotype data matrix assuming

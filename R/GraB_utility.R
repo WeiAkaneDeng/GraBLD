@@ -418,14 +418,14 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
 
     lm1_variables <- suppressWarnings(stats::lm(stats::as.formula(formulas),
         data = data_train))
-    var_index <- which(summary(lm1_variables)[["coefficients"]][,
+    var_index <- which(summary(lm1_variables)[["coefficients"]][-1,
         4] < sig)
 
-    if (var_index[1] == 0) {
+    if (is.na(var_index[1])) {
         print("The significance threshold selected does not support additional variables to be included, only the primary will be included in the final model.")
         formula_final = paste("target_beta_use ~ annot_primary")
             } else {
-        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index[-1]-1], collapse = "+"))
+        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index-1], collapse = "+"))
             }
 
     gbm1_diff2c <- gbm::gbm(stats::as.formula(formula_final),
