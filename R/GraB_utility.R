@@ -231,7 +231,9 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
     if (normalize == TRUE) {
         norm_data_num <- data_num
         sign_index <- sign(data_num[, names(data_num) %in% "annot_primary"])
-        norm_data_num$target_beta_update <- sign_index*(norm_data_num$target_beta-data_num[, names(data_num) %in% "annot_primary"])
+        sd_annot <- sd(data_num[, names(data_num) %in% "annot_primary"], na.rm=T)
+        sd_range <- sd(norm_data_num$target_beta, na.rm=T)
+        norm_data_num$target_beta_update <- sign_index*(norm_data_num$target_beta-data_num[, names(data_num) %in% "annot_primary"]/ifelse(is.na(sd_annot), 1, sd_annot)*ifelse(is.na(sd_range), 1, sd_range))
 
         return(norm_data_num)
 
@@ -378,10 +380,7 @@ get_data_num <- function(betas, annotations, abs_effect = NULL, normalize = FALS
 #'
 
 
-GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
-    steps = 1, validation = 5, verbose = FALSE, interval = 200,
-    sig = 1e-05, interact_depth = 5, shrink = 0.001, bag_frac = 0.5,
-    max_tree = 2000, WRITE = FALSE, normalize=TRUE, nCore = 1) {
+GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL, steps = 1, validation = 5, verbose = FALSE, interval = 200, sig = 1e-05, interact_depth = 5, shrink = 0.001, bag_frac = 0.5, max_tree = 2000, WRITE = FALSE, normalize=TRUE, nCore = 1) {
 
 
     if (is.null(betas) | is.null(annotations)) {
@@ -416,22 +415,23 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
         ])
 
 
-    lm1_variables <- suppressWarnings(stats::lm(stats::as.formula(formulas),
-        data = data_train))
-    var_index <- which(summary(lm1_variables)[["coefficients"]][-1,
-        4] < sig)
+    lm1_variables <- suppressWarnings(stats::lm(stats::as.formula(formulas), data = data_train))
+    var_index <- which(summary(lm1_variables)[["coefficients"]][-c(1:2), 4] < sig)
 
     if (is.na(var_index[1])) {
         print("The significance threshold selected does not support additional variables to be included, only the primary will be included in the final model.")
         formula_final = paste("target_beta_use ~ annot_primary")
             } else {
-        formula_final = paste("target_beta_use ~ ", paste(var_names[var_index], collapse = "+"))
+        formula_final = paste("target_beta_use ~ annot_primary+", paste(var_names[var_index], collapse = "+"))
             }
+
+
 
     gbm1_diff2c <- gbm::gbm(stats::as.formula(formula_final),
         data = data_train, distribution = "gaussian",
         interaction.depth = interact_depth,
-        shrinkage = shrink, bag.fraction = bag_frac, n.trees = max_tree,
+        shrinkage = shrink, bag.fraction = bag_frac,
+        n.trees = max_tree,
         n.cores = nCore)
 
     result = as.numeric()
@@ -447,19 +447,18 @@ GraB <- function(betas, annotations, abs_effect = NULL, trait_name = NULL,
 
     results = cbind(results, result)
 
-    GRS_adj_GIANT_all = data_predict$target_beta
-    sign_index_predict = sign_index[starting:ending]
-    SNP_name <- as.character(data_num_pr$SNP[starting:ending])
-
     best_nb_tree = which(max(result) == result) * interval
 
-    gbm1 <- gbm::gbm(stats::as.formula(formulas), data = data_train,
-        distribution = "gaussian", interaction.depth = interact_depth,
-        shrinkage = shrink, bag.fraction = bag_frac, n.trees = best_nb_tree,
-        n.cores = 1)
-    gbm1_predict_all <- gbm::predict.gbm(gbm1, data_predict,
-        n.trees = best_nb_tree) * sign_index_predict + GRS_adj_GIANT_all
+    gbm1 <- gbm::gbm(stats::as.formula(formulas), data = data_train, distribution = "gaussian", interaction.depth = interact_depth, shrinkage = shrink, bag.fraction = bag_frac, n.trees = best_nb_tree, n.cores = nCore)
 
+    GRS_adj_GIANT_all = data_predict$target_beta_use
+    sign_index_predict = sign_index[starting:ending]
+    SNP_name <- as.character(data_num_pr$SNP[starting:ending])
+    d_fitted <- gbm::predict.gbm(gbm1, data_predict,
+                          n.trees = best_nb_tree)
+    gbm1_predict_all <- d_fitted*sign_index_predict + GRS_adj_GIANT_all
+
+    cor(cbind(gbm1_predict_all, d_fitted, GRS_adj_GIANT_all))
 
     if (verbose == TRUE) {
 
