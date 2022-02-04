@@ -30,6 +30,11 @@ Logistically, the first step is to construct the annotation files that will be u
 
 The main driver of the gain performance is the summary statistics of a matching trait from large consortium, which is the second column of the annotation file. But the GraB algorithm does not need to be restricted to just one set of summary statistics, those from similar classes can be included. For example, for prediction of BMI, the second column can be the summary statistics for BMI from [GIANT](https://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files), and the third column can be the summary statistics for T2D from [DIAGRAM](https://www.diagram-consortium.org/), and fourth can be HDL from [GLGC](http://lipidgenetics.org). Additional functional information can also be included to updates the weights of each SNP included in the gene score.
 
+An important issue in using the external summary statistics with those from target data is, the phenotype on which the summary stats are calculated should be as similar as possible, both in terms of range and transformation applied. For example, if the BMI GWAS summary data from GIANT performed log transformation and was adjusted for sex, age, and waist, then the BMI in target data should be processed similarly to obtain target specific summary statistics. 
+
+Note that the computation of the target specific summary statistics must be done after sample splitting (if no additional data available). For prediction within sample, I recommend 50/50 split of the target data where each 50% portion is used to generate a set of GWAS summary. Then we simultanesouly (but separately) update the two sets of GWAS summary from target by the annotation (external GWAS). The GraBLD weights are then available to each 50/50 without sample overlap and can be used to perform prediction in the entire target sample without obvious overfitting issues. However, if the goal is to validate the PRS, then any random sample splitting is possible, provided that the samples used to generate target specific summary statistics are not part of the prediction/testing sample.
+
+
 
 ### 2.2 LD adjustments
 
